@@ -1,0 +1,84 @@
+<div id="wechat-alert" class="alert alert-danger text-center"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="jumbotron">
+                    <div class="jumbotron-photo">
+                        @if($is_using == false)
+                            {!! Html::image(asset('img/xxx/wechat_qrcode.png'), '微信登录', ['id'=>'wechat-qrcode']) !!}
+                        @else
+                            当前有人正在使用
+                        @endif
+                    </div>
+                    <div class="jumbotron-contents">
+                        <form id="save-wechat-robot" action="{{ URL::to('xxx/save-wechat-robot') }}" method="post">
+                            <h1>个人微信机器人</h1>
+                            <h2>
+                                <label>
+                                    <input type="checkbox" name="task_switch" value="1" @if($task_switch == true) checked @endif>
+                                    定时发送微信消息
+                                </label>
+                            </h2>
+                            <label>用户名:</label>
+                            <input type="text" class="form-control" name="task[username]" value="<?php echo mb_substr($task['username'], 0, 1).'**'; ?>" placeholder="用户名"/>
+                            <label>要说的话:</label>
+                            <input type="text" class="form-control" name="task[words]" value="<?php echo mb_substr($task['words'], 0, 1).'***'.mb_substr($task['words'], strlen($task['words'])-1, strlen($task['words'])) ?>" placeholder="要说的话"/>
+                            <label>发送时间:</label>
+                            <input type="text" class="form-control disabled" readonly name="task[send_time]" value="<?php echo date('Y-m-d H:i', $task['send_time']); ?>" placeholder="发送时间"/>
+                            <h2>
+                                <label>
+                                    <input type="checkbox" name="auto_reply_switch" value="1" @if($auto_reply_switch == true) checked @endif>
+                                    自动回复微信消息
+                                </label>
+                            </h2>
+                            <label>自动回复内容:</label>
+                            <input type="text" class="form-control" name="auto_reply" value="<?php echo mb_substr($auto_reply, 0, 1).'***'.mb_substr($auto_reply, strlen($auto_reply)-1, strlen($auto_reply)) ?>" placeholder="自动回复内容"/>
+                            <button class="button button-3d button-royal" @if($is_using == true) disabled @endif>保存!</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    var wechat_qrcode_url = "{!! asset('img/xxx/wechat_qrcode.png') !!}";
+
+    $(document).ready(function(){
+        $('input[name="task[send_time]"]').appendDtpicker({
+            //"inline": true,
+            "dateFormat": "YYYY-MM-DD hh:mm",
+        });
+
+        $('#save-wechat-robot').submit(function(){
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                dataType: 'html',
+                data: $(this).serialize(),
+                success: function(data){
+                    if(data == 'ok'){
+                        // 保存成功
+                        $('#wechat-alert').html('保存成功').removeAttr('class').attr('class', 'alert alert-success text-center').show().delay(2000).hide();
+                        window.location.href = '';
+                    }else{
+                        // 有人正在使用
+                        $('#wechat-alert').html('有人正在使用, 保存失败').removeAttr('class').attr('class', 'alert alert-danger text-center').show().delay(2000).hide();
+                    }
+                }
+            });
+            return false;
+        });
+
+        if(typeof refreshQRcode != 'undefined'){
+            clearInterval(refreshQRcode);
+        }
+        if($('#wechat-qrcode').length > 0) {
+            setInterval(function () {
+                var date = new Date();
+                $('#wechat-qrcode').removeAttr('src').attr('src', wechat_qrcode_url+'?'+date.getTime());
+            }, 60000);
+        }
+    });
+
+</script>
